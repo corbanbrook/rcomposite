@@ -1,0 +1,135 @@
+                                  
+                                  RComposite
+
+
+Class Summary:
+
+* Layers: There are 4 types of Layer Models,
+
+  * Layer: The base layer model. Can load an image from disk, blob,
+    or RMagick Image object. Contains methods to transform, change layer mode,
+    change opacity level, and more.
+
+  * FillLayer: A solid color, gradient, or pattern fill layer.
+
+  * AdjustmentLayer: Invert, Threshold, Levels, Blur adjustment layer.
+    Applies layer effect over everything under it in the layer stack.
+
+  * LayerMask: Mask any of the above layer types. LayerMasks are a special
+    type of layer which is a Alpha Channel mask that can be applied to any
+    layer type. Since LayerMask is also a layer, it can also be transformed
+    in any way.
+
+  * LayerSets: 2 types of LayerSet Models,
+
+    * LayerSet: The LayerSet is a container, or directory in which to bundle
+      layers. LayerSet contains methods to do group transforms on its bundled
+      layers. Transforms like rotation, movement and scaling are performed on
+      all the layers it contains while maintaining each layer on a seperate plane
+      without merging.
+
+    * Canvas: The canvas is a special LayerSet which is a blank workspace containing
+      other layers and layer sets.
+
+
+Usage:
+
+First you must require the gem or lib:
+
+  require 'rubygems'
+  require 'rcomposite'
+  include RComposite # includes the RComposite module methods into this scope
+
+After including the Module, we will need to create a blank canvas.
+
+  canvas = Canvas.new(640, 480)
+
+Creating a layer:
+
+  photo = Layer.new :file => 'photo.jpg'
+
+Creating a fill layer:
+
+  blue = FillLayer.new '#000090'
+
+Changing a Layers properties:
+
+  blue.opacity 40
+  blue.mode Multiply
+
+The layers may be added to the canvas. Whatever is added first will be on top:
+
+  canvas.layer blue
+  canvas.layer photo
+
+The canvas can be saved:
+
+  canvas.save_as 'bluesky.jpg'
+
+The real power of RComposite lies in its use of blocks and simplified syntax.
+Take a look at the following example:
+
+  Canvas.new(320,240) do
+
+    layer_set :slides do
+      layer :file => 'slide1.png' do
+        opacity 65
+        offset 12, 12
+        mode Lighten
+      end
+
+      adjustment_layer Blur, 0.5, 1.5 do
+        layer_mask :file => 'butterfly-mask.png'
+      end
+
+      layer :file => 'slide2.png' do
+        offset 28, 28
+        opacity 30
+        mode Darken
+      end
+
+      rotate 45
+      offset 70, 50
+      scale 80, 80
+    end
+
+    fill_layer SolidColor, '#f83898FF' do
+      opacity 70
+      mode Multiply
+
+      layer_mask :file => 'butterfly-mask.png' do
+        offset -30, -30
+        image.rotate! 40
+      end
+    end
+
+    fill_layer Gradient, 0, 0, 0, 50, '#606', '#033' do
+      opacity 90
+      mode Overlay
+
+      layer_mask :file => 'butterfly-mask.png' do
+        offset -20, -20
+      end
+    end
+
+    layer :file => 'background.png' do
+      image.resize!(320, 240)
+    end
+
+    save_as 'composite.jpg'
+  end
+
+This nice thing about RComposite is that it doesnt hide the underlaying RMagick
+Image object from you. It is always available through the image accessor
+
+  layer :file => 'photo.jpg' do
+    image.crop_resized!(100,300) # crop_resized! is a RMagick method
+  end
+
+
+
+@corban                                                    weare.buildingsky.net
+________________________________________________________________________________
+
+       Copyright (c) 2009 Corban Brook, released under the MIT license
+                                                                                  

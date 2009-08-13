@@ -1,6 +1,30 @@
                                   
                                   RComposite
 
+RComposite is an RMagick abstraction library to easily manipulate and composite 
+images through the use of a canvas, layers, layer masks, adjustment layers, fill
+layers, and layer sets (much like in Photoshop).
+
+
+Install:
+
+Add the github repository to your gem sources:
+
+  sudo gem sources -a http://gems.github.com
+
+Install the gem from github:
+
+  sudo gem install corbanbrook-rcomposite
+
+Require:
+
+  require 'rubygems'
+  require 'rcomposite'
+
+  include RComposite # optional: if you wish to have the RComposite module in your project scope
+
+  ...
+
 
 Class Summary:
 
@@ -34,92 +58,124 @@ Class Summary:
 
 Usage:
 
-First you must require the gem or lib:
+* Creating a blank canvas:
 
-  require 'rubygems'
-  require 'rcomposite'
-  include RComposite # includes the RComposite module methods into this scope
+    canvas = RComposite::Canvas.new(640, 480)
 
-After including the Module, we will need to create a blank canvas.
+  Canvas also accepts an optional block for easily adding layers to the stack
 
-  canvas = Canvas.new(640, 480)
-
-Creating a layer:
-
-  photo = Layer.new :file => 'photo.jpg'
-
-Creating a fill layer:
-
-  blue = FillLayer.new '#000090'
-
-Changing a Layers properties:
-
-  blue.opacity 40
-  blue.mode Multiply
-
-The layers may be added to the canvas. Whatever is added first will be on top:
-
-  canvas.layer blue
-  canvas.layer photo
-
-The canvas can be saved:
-
-  canvas.save_as 'bluesky.jpg'
-
-The real power of RComposite lies in its use of blocks and simplified syntax.
-Take a look at the following example:
-
-  Canvas.new(320,240) do
-
-    layer_set :slides do
-      layer :file => 'slide1.png' do
-        opacity 65
-        offset 12, 12
-        mode Lighten
-      end
-
-      adjustment_layer Blur, 0.5, 1.5 do
-        layer_mask :file => 'butterfly-mask.png'
-      end
-
-      layer :file => 'slide2.png' do
-        offset 28, 28
-        opacity 30
-        mode Darken
-      end
-
-      rotate 45
-      offset 70, 50
-      scale 80, 80
+    canvas = Rcomposite::Canvas.new(640, 480) do
+      layer :file => 'butterfly.png'
     end
+
+* Creating a layer:
+
+    photo = RComposite::Layer.new :file => 'photo.jpg'
+
+* Creating a fill layer:
+
+    blue = RCompisite::FillLayer.new '#000090'
+
+* Changing a Layers properties:
+
+    blue.opacity 40
+    blue.mode Multiply
+
+* Adding layers to the canvas. (Whatever is added first will be on top):
+
+    canvas.layer blue
+    canvas.layer photo
+
+* Saving the canvas:
+
+    canvas.save_as 'bluesky.jpg'
+
+* Adding an alpha channel mask to a layer:
+
+  Masks are used to punch holes into layers to add transparency.
+
+    blue.layer_mask :file => 'alpha_channel.png'
+
+  You can add layer options to the mask just like it was a normal layer.
 
     fill_layer SolidColor, '#f83898FF' do
-      opacity 70
-      mode Multiply
-
       layer_mask :file => 'butterfly-mask.png' do
         offset -30, -30
-        image.rotate! 40
+        rotate 40
       end
     end
 
-    fill_layer Gradient, 0, 0, 0, 50, '#606', '#033' do
-      opacity 90
-      mode Overlay
 
-      layer_mask :file => 'butterfly-mask.png' do
-        offset -20, -20
+The real power of RComposite lies in its use of blocks and simplified syntax.
+Take a look at the following examples:
+
+* Just like the Canvas, all layer types also accept an optional block parametre for setting layer options:
+
+    butterfly = RComposite::Layer :file => 'butterfly.png' do 
+      offset 100, 100 # moves the layer on the canvas
+      rotate 25
+    end
+
+  or..
+
+    canvas.layer :file => 'butterfly.png' do 
+      ..
+    end
+
+* DSL Example
+
+    Canvas.new(320,240) do
+
+      layer_set :slides do
+        layer :file => 'slide1.png' do
+          opacity 65
+          offset 12, 12
+          mode Lighten
+        end
+
+        adjustment_layer Blur, 0.5, 1.5 do
+          layer_mask :file => 'butterfly-mask.png'
+        end
+
+        layer :file => 'slide2.png' do
+          offset 28, 28
+          opacity 30
+          mode Darken
+        end
+
+        rotate 45
+        offset 70, 50
+        scale 80, 80
       end
+
+      fill_layer SolidColor, '#f83898FF' do
+        opacity 70
+        mode Multiply
+
+        layer_mask :file => 'butterfly-mask.png' do
+          offset -30, -30
+          image.rotate! 40
+        end
+      end
+
+      fill_layer Gradient, 0, 0, 0, 50, '#606', '#033' do
+        opacity 90
+        mode Overlay
+
+        layer_mask :file => 'butterfly-mask.png' do
+          offset -20, -20
+        end
+      end
+
+      layer :file => 'background.png' do
+        image.resize!(320, 240)
+      end
+
+      save_as 'composite.jpg'
     end
 
-    layer :file => 'background.png' do
-      image.resize!(320, 240)
-    end
 
-    save_as 'composite.jpg'
-  end
-
-This nice thing about RComposite is that it doesnt hide the underlaying RMagick
+The nice thing about RComposite is that it doesnt hide the underlaying RMagick
 Image object from you. It is always available through the image accessor
 
   layer :file => 'photo.jpg' do

@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = 'rcomposite'
-  s.version = '0.3.0'
-  s.date = '2009-07-24'
+  s.version = '0.3.1'
+  s.date = '2009-08-13'
 
   s.summary = "An RMagick abstration layer for easy image compositing"
   s.description = "Rubyshop is an RMagick abstraction library to easily manipulate and composite images through the use of a canvas, layers, layer masks, adjustment layers, fill layers, and layer sets (much like in Photoshop)"

@@ -5,7 +5,6 @@ module RComposite
     
     def initialize(name, &block)
       @layers = []
-      @layer_sets = {}
 
       bounding_box
       @name = name
@@ -13,23 +12,25 @@ module RComposite
       self.instance_eval &block if block_given?
     end
 
-    def layer_set(set_or_name, &block) 
-      if set_or_name.is_a? RComposite::LayerSet
-        # referencing a previously instanstiated LayerSet and adding to Canvas.
-        set = set_or_name
-        @layers << set
-        @layer_sets[set.name] = set 
-      
-      elsif @layer_sets[set_or_name]
-        # referencing a previously added LayerSet.
-        set = @layer_sets[set_or_name]
-      
+    def stack(&block)
+      self.instance_eval &block if block_given?
+    end
+
+    def layer_set(ref, position = :bottom, &block) 
+      if ref.is_a? RComposite::LayerSet
+        # referencing a previously instanstiated LayerSet.
+        set = ref 
       else    
-        # creating a new LayerSet and adding to Canvas.
-        set = LayerSet.new set_or_name  
-        @layers << set
-        @layer_sets[set_or_name] = set
+        # creating a new LayerSet
+        set = LayerSet.new ref  
       end     
+      
+      # Add layer set to render pipeline
+      if position == :bottom
+        @layers << set
+      elsif position == :top
+        @layers.unshift set
+      end
 
       # tie floating block methods (layer, rotate, offset, etc) to LayerSet object.
       set.instance_eval &block if block_given?
@@ -43,6 +44,8 @@ module RComposite
       else
         layer = Layer.new options
       end
+
+      # Add layer to render pipeline
       @layers << layer
 
       # tie floating block methods (opacity, mode, offset, etc) to Layer object.
@@ -76,7 +79,6 @@ module RComposite
       
       # clear layers and sets
       @layers.clear
-      @layer_sets.clear
 
       # only 1 flattened layer now   
       @layers << Layer.new(flattened_image)
@@ -114,7 +116,7 @@ module RComposite
       @layers.delete(layer)
       bounding_box
     end
-    
+
     def bounding_box
       if @layers.size > 0
         x1 = []
@@ -181,7 +183,7 @@ module RComposite
         new_mid_x = ((layer_mid_x * cos) - (layer_mid_y * sin)).round
         new_mid_y = ((layer_mid_x * sin) + (layer_mid_y * cos)).round
       
-        layer.image.rotate!(degrees)
+        layer.rotate(degrees)
 
         new_offset_x = new_mid_x - (layer.width/2.0).round + @min_x + bounding_mid_x
         new_offset_y = new_mid_y * -1 - (layer.height/2.0).round + @min_y + bounding_mid_y

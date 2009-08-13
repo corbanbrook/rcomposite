@@ -80,6 +80,10 @@ module RComposite
       @offset_y = y
     end
 
+    def rotate(degrees)
+      @image.rotate!(degrees)
+    end
+
     def opacity(percent)
       @opacity_percent = percent
       # intercept original alpha channel with pixel intensity

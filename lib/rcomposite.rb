@@ -6,3 +6,4 @@ require 'rcomposite/canvas'
 require 'rcomposite/filllayer'
 require 'rcomposite/adjustmentlayer'
 require 'rcomposite/layermask'
+
